@@ -1,0 +1,10 @@
+jupyterlab
+pandas
+scikit-learn
+plotly
+git+https://github.com/pfnet/optuna.git
+lightgbm
+featuretools
+click
+matplotlib
+numpy
