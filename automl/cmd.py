@@ -1,9 +1,15 @@
 import functools
+import os
+import pandas as pd
 import sys
 import click
+from sklearn.metrics import roc_auc_score
 
+from automl import DATA_DIR, OUTPUT_DIR
+from automl.feature import generate_feature
 from automl.model import train_and_predict
 from automl.notification import notify_slack
+from automl.hyperparameters import optimize
 
 
 def notify_if_catch_exception(func):
@@ -26,14 +32,34 @@ def cmd():
 
 
 @cmd.command()
+@click.option('--trials', type=int, default=10,
+              help='The number of trials.')
+@notify_if_catch_exception
+def search(trials):
+    """Search hyperparameters."""
+    study = optimize(trials)
+    click.echo(f"best_trial: {study.best_trial}")
+    click.echo(f"$ optuna dashboard --study adult --storage sqlite:///db.sqlite3")
+
+
+@cmd.command()
 @click.option('--features', type=int, default=12,
               help='The number of features.')
 @notify_if_catch_exception
 def predict(features):
     """Train and predict using LightGBM."""
+    train_x = pd.read_csv(os.path.join(DATA_DIR, 'train_x.csv'))
+    train_y = pd.read_csv(os.path.join(DATA_DIR, 'train_y.csv'), header=None)
+    test_x = pd.read_csv(os.path.join(DATA_DIR, 'test_x.csv'))
 
-    auc = train_and_predict(n_features=features)
-    print("AUC:", auc)
+    train_feature, test_feature = generate_feature(train_x, train_y, test_x, features)
+
+    predictions = train_and_predict(train_feature, train_y, test_feature)
+    pd.Series(predictions).to_csv(os.path.join(OUTPUT_DIR, 'submission.csv'), index=False, header=False)
+
+    test_y = pd.read_csv(os.path.join(DATA_DIR, 'test_y.csv'), header=None)
+    auc = roc_auc_score(test_y, predictions)
+    click.echo(f"AUC: {auc}")
 
 
 if __name__ == '__main__':

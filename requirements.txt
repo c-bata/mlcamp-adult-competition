@@ -8,3 +8,4 @@ featuretools
 click
 matplotlib
 numpy
+bokeh
