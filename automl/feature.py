@@ -30,6 +30,16 @@ def generate_feature(train_x: pd.DataFrame,
             train_feature.loc[train_feature[column] == value, f'{column}_target_encoding'] = value_mean
             test_feature.loc[test_feature[column] == value, f'{column}_target_encoding'] = value_mean
 
+    # frequency encoding
+    frequency_encoding_columns = [
+        'workclass', 'education', 'marital-status', 'occupation', 'relationship',
+        'race', 'capital-gain', 'native-country']
+
+    for column in frequency_encoding_columns:
+        freq = train_feature[column].value_counts()
+        train_feature[f'{column}_frequency_encoding'] = train_feature[column].map(freq)
+        test_feature[f'{column}_frequency_encoding'] = test_feature[column].map(freq)
+
     # categorical encoding
     train_feature['sex'] = train_feature['sex'] == 'Male'
     test_feature['sex'] = test_feature['sex'] == 'Male'
