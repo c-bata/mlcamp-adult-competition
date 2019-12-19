@@ -18,6 +18,18 @@ def generate_feature(train_x: pd.DataFrame,
     train_feature = train_feature.fillna(value='?')
     test_feature = test_feature.fillna(value='?')
 
+    # target encoding
+    target_encoding_columns = [
+        'workclass', 'education', 'marital-status', 'occupation', 'relationship',
+        'race', 'capital-gain', 'native-country']
+
+    for column in target_encoding_columns:
+        train_feature[f'{column}_target_encoding'] = 0
+        for value in train_feature[column].unique():
+            value_mean = train_y[train_feature[column] == value].mean()
+            train_feature.loc[train_feature[column] == value, f'{column}_target_encoding'] = value_mean
+            test_feature.loc[test_feature[column] == value, f'{column}_target_encoding'] = value_mean
+
     # categorical encoding
     train_feature['sex'] = train_feature['sex'] == 'Male'
     test_feature['sex'] = test_feature['sex'] == 'Male'

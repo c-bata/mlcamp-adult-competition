@@ -32,12 +32,14 @@ def cmd():
 
 
 @cmd.command()
-@click.option('--trials', type=int, default=10,
+@click.option('--trials', type=int, default=50,
               help='The number of trials.')
+@click.option('--synthesis/--no-synthesis', default=False,
+              help='Synthesis feature if true')
 @notify_if_catch_exception
-def search(trials):
+def search(trials, synthesis):
     """Search hyperparameters."""
-    study = optimize(trials)
+    study = optimize(trials, synthesis)
     click.echo(f"best_trial: {study.best_trial}")
     click.echo(f"$ optuna dashboard --study adult --storage sqlite:///db.sqlite3")
 
@@ -45,7 +47,7 @@ def search(trials):
 @cmd.command()
 @click.option('--features', type=int, default=12,
               help='The number of features.')
-@click.option('--synthesis', type=bool, default=True,
+@click.option('--synthesis/--no-synthesis', default=False,
               help='Synthesis feature if true')
 @notify_if_catch_exception
 def predict(features, synthesis):
