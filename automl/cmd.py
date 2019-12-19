@@ -45,14 +45,17 @@ def search(trials):
 @cmd.command()
 @click.option('--features', type=int, default=12,
               help='The number of features.')
+@click.option('--synthesis', type=bool, default=True,
+              help='Synthesis feature if true')
 @notify_if_catch_exception
-def predict(features):
+def predict(features, synthesis):
     """Train and predict using LightGBM."""
     train_x = pd.read_csv(os.path.join(DATA_DIR, 'train_x.csv'))
     train_y = pd.read_csv(os.path.join(DATA_DIR, 'train_y.csv'), header=None)
     test_x = pd.read_csv(os.path.join(DATA_DIR, 'test_x.csv'))
 
-    train_feature, test_feature = generate_feature(train_x, train_y, test_x, features)
+    train_feature, test_feature = generate_feature(
+        train_x, train_y, test_x, features, synthesis=synthesis)
 
     predictions = train_and_predict(train_feature, train_y, test_feature)
     pd.Series(predictions).to_csv(os.path.join(OUTPUT_DIR, 'submission.csv'), index=False, header=False)

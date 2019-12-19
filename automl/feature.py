@@ -1,12 +1,16 @@
+import featuretools as ft
 import pandas as pd
-from sklearn import preprocessing
 from typing import Tuple
+from sklearn import preprocessing
 
 from automl.rfe import RFE
 
 
-def generate_feature(train_x: pd.DataFrame, train_y: pd.DataFrame,
-                     test_x: pd.DataFrame, n_features: int) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def generate_feature(train_x: pd.DataFrame,
+                     train_y: pd.DataFrame,
+                     test_x: pd.DataFrame,
+                     n_features: int,
+                     synthesis: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame]:
     train_feature = train_x.copy()
     test_feature = test_x.copy()
 
@@ -28,6 +32,11 @@ def generate_feature(train_x: pd.DataFrame, train_y: pd.DataFrame,
         train_feature[column] = pd.Series(le.transform(train_feature[column])).astype('category')
         test_feature[column] = pd.Series(le.transform(test_feature[column])).astype('category')
 
+    # synthesis feature
+    if synthesis:
+        train_feature = synthesis_feature(train_feature)
+        test_feature = synthesis_feature(test_feature)
+
     # feature selection
     selector = RFE(n_features_to_select=n_features)
     selector.fit(train_feature, train_y)
@@ -35,3 +44,21 @@ def generate_feature(train_x: pd.DataFrame, train_y: pd.DataFrame,
     train_feature = train_feature[train_feature.columns[selector.support_]]
     test_feature = test_feature[test_feature.columns[selector.support_]]
     return train_feature, test_feature
+
+
+def synthesis_feature(data: pd.DataFrame) -> pd.DataFrame:
+    es = ft.EntitySet(id="adult_dataset")
+    es = es.entity_from_dataframe(
+        entity_id='root',
+        index='',
+        dataframe=data,
+        variable_types={
+            'sex': ft.variable_types.Boolean,
+        })
+    feature_matrix, feature_defs = ft.dfs(
+        entityset=es,
+        target_entity='root',
+        trans_primitives=[
+            'percentile', 'absolute',
+        ])
+    return feature_matrix
