@@ -9,3 +9,4 @@ click
 matplotlib
 numpy
 bokeh
+scikit-optimize

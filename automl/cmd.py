@@ -32,7 +32,7 @@ def cmd():
 
 
 @cmd.command()
-@click.option('--trials', type=int, default=50,
+@click.option('--trials', type=int, default=12,
               help='The number of trials.')
 @click.option('--synthesis/--no-synthesis', default=False,
               help='Synthesis feature if true')

@@ -71,13 +71,15 @@ def optimize(n_trials: int, synthesis: bool) -> optuna.Study:
     study = optuna.create_study(
         study_name='adult',
         storage='sqlite:///db.sqlite3',
-        sampler=optuna.samplers.TPESampler(),
+        sampler=optuna.integration.SkoptSampler(skopt_kwargs={
+            'n_initial_points': 4,
+        }),
         direction='maximize',
         load_if_exists=True,
     )
 
     def objective(trial):
-        n_features = trial.suggest_int("features", 4, 32)
+        n_features = trial.suggest_int("features", 8, 64)
         train_feature, test_feature = generate_feature(
             train_x, train_y, test_x, n_features, synthesis=synthesis)
         return cross_val_score(train_model, train_feature, train_y, cv=4)

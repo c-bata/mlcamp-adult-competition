@@ -14,9 +14,12 @@ def generate_feature(train_x: pd.DataFrame,
     train_feature = train_x.copy()
     test_feature = test_x.copy()
 
-    # preprocess
+    # preprocess (impute missing values for label encoding)
     train_feature = train_feature.fillna(value='?')
     test_feature = test_feature.fillna(value='?')
+
+    train_feature['sex'] = train_feature['sex'] == 'Male'
+    test_feature['sex'] = test_feature['sex'] == 'Male'
 
     # target encoding
     target_encoding_columns = [
@@ -40,14 +43,24 @@ def generate_feature(train_x: pd.DataFrame,
         train_feature[f'{column}_frequency_encoding'] = train_feature[column].map(freq)
         test_feature[f'{column}_frequency_encoding'] = test_feature[column].map(freq)
 
-    # categorical encoding
-    train_feature['sex'] = train_feature['sex'] == 'Male'
-    test_feature['sex'] = test_feature['sex'] == 'Male'
+    # one-hot encoding
+    features = train_feature.append(test_feature, ignore_index=True)
+    onehot_encoding_columns = [
+        'workclass', 'education', 'marital-status', 'occupation', 'relationship',
+        'race', 'native-country']
+    len_train_feature = len(train_feature)
+    updated = pd.get_dummies(features)
+    for column in onehot_encoding_columns:
+        # inject original columns for label encoding
+        updated[column] = features[column]
+    train_feature = updated[:len_train_feature]
+    test_feature = updated[len_train_feature:]
 
+    # label encoding
+    features = train_feature.append(test_feature, ignore_index=True)
     categorical_columns = [
         'workclass', 'education', 'marital-status', 'occupation', 'relationship',
-        'race', 'capital-gain', 'native-country']
-    features = train_feature.append(test_feature, ignore_index=True)
+        'race', 'native-country']
     for column in categorical_columns:
         le = preprocessing.LabelEncoder()
         le.fit(features[column])
