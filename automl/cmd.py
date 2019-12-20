@@ -45,7 +45,7 @@ def search(trials, synthesis):
 
 
 @cmd.command()
-@click.option('--features', type=int, default=12,
+@click.option('--features', type=int, default=None,
               help='The number of features.')
 @click.option('--synthesis/--no-synthesis', default=False,
               help='Synthesis feature if true')

@@ -1,6 +1,6 @@
 import featuretools as ft
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, Optional
 from sklearn import preprocessing
 
 from automl.rfe import RFE
@@ -9,7 +9,7 @@ from automl.rfe import RFE
 def generate_feature(train_x: pd.DataFrame,
                      train_y: pd.DataFrame,
                      test_x: pd.DataFrame,
-                     n_features: int,
+                     n_features: Optional[int],
                      synthesis: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame]:
     train_feature = train_x.copy()
     test_feature = test_x.copy()
@@ -73,11 +73,11 @@ def generate_feature(train_x: pd.DataFrame,
         test_feature = synthesis_feature(test_feature)
 
     # feature selection
-    selector = RFE(n_features_to_select=n_features)
-    selector.fit(train_feature, train_y)
-
-    train_feature = train_feature[train_feature.columns[selector.support_]]
-    test_feature = test_feature[test_feature.columns[selector.support_]]
+    if n_features is not None:
+        selector = RFE(n_features_to_select=n_features)
+        selector.fit(train_feature, train_y)
+        train_feature = train_feature[train_feature.columns[selector.support_]]
+        test_feature = test_feature[test_feature.columns[selector.support_]]
     return train_feature, test_feature
 
 
