@@ -51,8 +51,10 @@ def search(trials, synthesis):
 @click.option('--category-encoding',
               type=click.Choice(['label', 'ohe'], case_sensitive=False),
               default='label')
+@click.option('--fold', type=int, default=1,
+              help='The number of LightGBM model learned from N folded dataset.')
 @notify_if_catch_exception
-def predict(features, featuretools, category_encoding):
+def predict(features, featuretools, category_encoding, fold):
     """Train and predict using LightGBM."""
     train_x = pd.read_csv(os.path.join(DATA_DIR, 'train_x.csv'))
     train_y = pd.read_csv(os.path.join(DATA_DIR, 'train_y.csv'), header=None)
@@ -62,7 +64,7 @@ def predict(features, featuretools, category_encoding):
         train_x, train_y, test_x, features,
         synthesis=featuretools, category_encoding=category_encoding)
 
-    predictions = train_and_predict(train_feature, train_y, test_feature)
+    predictions = train_and_predict(train_feature, train_y, test_feature, fold=fold)
     pd.Series(predictions).to_csv(os.path.join(OUTPUT_DIR, 'submission.csv'), index=False, header=False)
 
     test_y = pd.read_csv(os.path.join(DATA_DIR, 'test_y.csv'), header=None)
