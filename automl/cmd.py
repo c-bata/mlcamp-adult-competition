@@ -46,13 +46,13 @@ def search(trials, synthesis):
 @cmd.command()
 @click.option('--features', type=int, default=None,
               help='The number of features.')
-@click.option('--synthesis/--no-synthesis', default=False,
-              help='Synthesis feature if true')
+@click.option('--featuretools/--no-featuretools', default=False,
+              help='Synthesis features using feature tools if True')
 @click.option('--category-encoding',
               type=click.Choice(['label', 'ohe'], case_sensitive=False),
               default='label')
 @notify_if_catch_exception
-def predict(features, synthesis, category_encoding):
+def predict(features, featuretools, category_encoding):
     """Train and predict using LightGBM."""
     train_x = pd.read_csv(os.path.join(DATA_DIR, 'train_x.csv'))
     train_y = pd.read_csv(os.path.join(DATA_DIR, 'train_y.csv'), header=None)
@@ -60,7 +60,7 @@ def predict(features, synthesis, category_encoding):
 
     train_feature, test_feature = generate_feature(
         train_x, train_y, test_x, features,
-        synthesis=synthesis, category_encoding=category_encoding)
+        synthesis=featuretools, category_encoding=category_encoding)
 
     predictions = train_and_predict(train_feature, train_y, test_feature)
     pd.Series(predictions).to_csv(os.path.join(OUTPUT_DIR, 'submission.csv'), index=False, header=False)
