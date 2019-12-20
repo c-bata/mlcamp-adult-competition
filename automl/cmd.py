@@ -35,7 +35,7 @@ def cmd():
 @click.option('--trials', type=int, default=12,
               help='The number of trials.')
 @notify_if_catch_exception
-def search(trials, synthesis):
+def search(trials):
     """Search hyperparameters."""
     study = optimize(trials)
     click.echo(f"best_trial: {study.best_trial}")
