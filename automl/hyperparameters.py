@@ -67,12 +67,12 @@ def cross_val_score(model_trainer, X, y, cv) -> float:
     return np.mean(scores)
 
 
-def optimize(n_trials: int, synthesis: bool) -> optuna.Study:
+def optimize(n_trials: int) -> optuna.Study:
     study = optuna.create_study(
         study_name='adult',
         storage='sqlite:///db.sqlite3',
         sampler=optuna.integration.SkoptSampler(skopt_kwargs={
-            'n_initial_points': 4,
+            'n_initial_points': 5,
         }),
         direction='maximize',
         load_if_exists=True,
@@ -80,8 +80,11 @@ def optimize(n_trials: int, synthesis: bool) -> optuna.Study:
 
     def objective(trial):
         n_features = trial.suggest_int("features", 8, 64)
+        synthesis = trial.suggest_categorical('synthesis', [True, False])
+        category_encoding = trial.suggest_categorical('category_encoding', ['label', 'ohe'])
         train_feature, test_feature = generate_feature(
-            train_x, train_y, test_x, n_features, synthesis=synthesis)
+            train_x, train_y, test_x, n_features,
+            synthesis=synthesis, category_encoding=category_encoding)
         return cross_val_score(train_model, train_feature, train_y, cv=4)
 
     if n_trials > 0:

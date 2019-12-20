@@ -10,7 +10,8 @@ def generate_feature(train_x: pd.DataFrame,
                      train_y: pd.DataFrame,
                      test_x: pd.DataFrame,
                      n_features: Optional[int],
-                     synthesis: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame]:
+                     synthesis: bool = True,
+                     category_encoding: str = 'label') -> Tuple[pd.DataFrame, pd.DataFrame]:
     train_feature = train_x.copy()
     test_feature = test_x.copy()
 
@@ -43,29 +44,26 @@ def generate_feature(train_x: pd.DataFrame,
         train_feature[f'{column}_frequency_encoding'] = train_feature[column].map(freq)
         test_feature[f'{column}_frequency_encoding'] = test_feature[column].map(freq)
 
-    # one-hot encoding
-    features = train_feature.append(test_feature, ignore_index=True)
-    onehot_encoding_columns = [
-        'workclass', 'education', 'marital-status', 'occupation', 'relationship',
-        'race', 'native-country']
-    len_train_feature = len(train_feature)
-    updated = pd.get_dummies(features)
-    for column in onehot_encoding_columns:
-        # inject original columns for label encoding
-        updated[column] = features[column]
-    train_feature = updated[:len_train_feature]
-    test_feature = updated[len_train_feature:]
-
-    # label encoding
-    features = train_feature.append(test_feature, ignore_index=True)
-    categorical_columns = [
-        'workclass', 'education', 'marital-status', 'occupation', 'relationship',
-        'race', 'native-country']
-    for column in categorical_columns:
-        le = preprocessing.LabelEncoder()
-        le.fit(features[column])
-        train_feature[column] = pd.Series(le.transform(train_feature[column])).astype('category')
-        test_feature[column] = pd.Series(le.transform(test_feature[column])).astype('category')
+    if category_encoding == 'ohe':
+        # one-hot encoding
+        features = train_feature.append(test_feature, ignore_index=True)
+        len_train_feature = len(train_feature)
+        updated = pd.get_dummies(features)
+        train_feature = updated[:len_train_feature]
+        test_feature = updated[len_train_feature:]
+    elif category_encoding == 'label':
+        # label encoding
+        features = train_feature.append(test_feature, ignore_index=True)
+        categorical_columns = [
+            'workclass', 'education', 'marital-status', 'occupation', 'relationship',
+            'race', 'native-country']
+        for column in categorical_columns:
+            le = preprocessing.LabelEncoder()
+            le.fit(features[column])
+            train_feature[column] = pd.Series(le.transform(train_feature[column])).astype('category')
+            test_feature[column] = pd.Series(le.transform(test_feature[column])).astype('category')
+    else:
+        raise ValueError('must not reach here!')
 
     # synthesis feature
     if synthesis:

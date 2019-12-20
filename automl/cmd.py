@@ -34,13 +34,12 @@ def cmd():
 @cmd.command()
 @click.option('--trials', type=int, default=12,
               help='The number of trials.')
-@click.option('--synthesis/--no-synthesis', default=False,
-              help='Synthesis feature if true')
 @notify_if_catch_exception
 def search(trials, synthesis):
     """Search hyperparameters."""
-    study = optimize(trials, synthesis)
+    study = optimize(trials)
     click.echo(f"best_trial: {study.best_trial}")
+    click.echo("See optuna dashboard for more details:")
     click.echo(f"$ optuna dashboard --study adult --storage sqlite:///db.sqlite3")
 
 
@@ -49,15 +48,19 @@ def search(trials, synthesis):
               help='The number of features.')
 @click.option('--synthesis/--no-synthesis', default=False,
               help='Synthesis feature if true')
+@click.option('--category-encoding',
+              type=click.Choice(['label', 'ohe'], case_sensitive=False),
+              default='label')
 @notify_if_catch_exception
-def predict(features, synthesis):
+def predict(features, synthesis, category_encoding):
     """Train and predict using LightGBM."""
     train_x = pd.read_csv(os.path.join(DATA_DIR, 'train_x.csv'))
     train_y = pd.read_csv(os.path.join(DATA_DIR, 'train_y.csv'), header=None)
     test_x = pd.read_csv(os.path.join(DATA_DIR, 'test_x.csv'))
 
     train_feature, test_feature = generate_feature(
-        train_x, train_y, test_x, features, synthesis=synthesis)
+        train_x, train_y, test_x, features,
+        synthesis=synthesis, category_encoding=category_encoding)
 
     predictions = train_and_predict(train_feature, train_y, test_feature)
     pd.Series(predictions).to_csv(os.path.join(OUTPUT_DIR, 'submission.csv'), index=False, header=False)
