@@ -53,8 +53,13 @@ def search(trials, synthesis):
               default='label')
 @click.option('--fold', type=int, default=1,
               help='The number of LightGBM model learned from N folded dataset.')
+@click.option('--save-model/--no-save-model', default=False,
+              help='Save models in output directory, if true.')
+@click.option('--save-feature-importance/--no-save-feature-importance', default=False,
+              help='Save image of feature importance, if true.')
 @notify_if_catch_exception
-def predict(features, featuretools, category_encoding, fold):
+def predict(features, featuretools, category_encoding, fold,
+            save_model, save_feature_importance):
     """Train and predict using LightGBM."""
     train_x = pd.read_csv(os.path.join(DATA_DIR, 'train_x.csv'))
     train_y = pd.read_csv(os.path.join(DATA_DIR, 'train_y.csv'), header=None)
@@ -64,7 +69,9 @@ def predict(features, featuretools, category_encoding, fold):
         train_x, train_y, test_x, features,
         synthesis=featuretools, category_encoding=category_encoding)
 
-    predictions = train_and_predict(train_feature, train_y, test_feature, fold=fold)
+    predictions = train_and_predict(
+        train_feature, train_y, test_feature,
+        fold=fold, save_model=save_model, save_feature_importance=save_feature_importance)
     pd.Series(predictions).to_csv(os.path.join(OUTPUT_DIR, 'submission.csv'), index=False, header=False)
 
     test_y = pd.read_csv(os.path.join(DATA_DIR, 'test_y.csv'), header=None)
